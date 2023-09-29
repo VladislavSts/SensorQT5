@@ -18,6 +18,8 @@ InitWindow::InitWindow(QWidget *parent) : QDialog(parent), ui(new Ui::InitWindow
     ui->StatusSensorLabel->setFont(font);
 
     // Конфигурация последовательного порта
+    connect(SerialPort, SIGNAL(readyRead()), this, SLOT(CallbackSerialReceive()));
+
     SerialPort->setPortName("COM4");
     SerialPort->setBaudRate(QSerialPort::Baud9600);
     SerialPort->setDataBits(QSerialPort::Data8);
@@ -37,11 +39,16 @@ void InitWindow::on_StartSensorButton_clicked()
 {
     ui->StatusSensorLabel->setText("Соединение с датчиком ...");
     // Connecting to sensor ...
-    SerialPort->open(QIODevice::ReadWrite); // открыть последовательный порт
-    connect(SerialPort, SIGNAL(readyRead()), this, SLOT(CallbackSerialReceive()));
-    SerialPort->write("Hello!");
+    if (SerialPort->open(QIODevice::ReadWrite) || SerialPort->isOpen()) {
+        ui->StatusSensorLabel->setText("Порт " + SerialPort->portName() + " открыт! Соединение ...");
+        SerialPort->write("start");
+    }
+    else {
+        ui->StatusSensorLabel->setText("Не удалось открыть порт " + SerialPort->portName());
+    }
 }
 
+/* Callback функция, вызывается при появлении новых данных для чтения */
 void InitWindow::CallbackSerialReceive()
 {
     QByteArray data = SerialPort->readAll();  // Чтение доступных данных из порта
@@ -51,12 +58,14 @@ void InitWindow::CallbackSerialReceive()
         return;
     }
 
-    // Обработка строки message
-    ui->StatusSensorLabel->setText(data);
+    if (data == "startsensor") {
+        ui->StatusSensorLabel->setText("Соединение установлено!");
+        // Нужно вычитывать данные от сенсора
+        // Вопрос протокола обмена данными
+    }
 
-    // Вывод строки в консоль
     QString message = QString(data);  // Преобразование массива байт в строку
-    qDebug() << "Received message: " << message;
+    qDebug() << "Received message: " << message;  // Вывод строки в консоль
 }
 
 void InitWindow::on_RepConnectButton_clicked()

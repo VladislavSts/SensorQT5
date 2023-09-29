@@ -1,6 +1,7 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 #include "initwindow.h"
+#include "configserialport.h"
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
@@ -21,5 +22,13 @@ void MainWindow::on_StartButton_clicked()
     Window.setModal(true);
     Window.exec();
 
+}
+
+
+void MainWindow::on_ConfigSerialPort_triggered()
+{
+    ConfigSerialPort ConfigWindow;
+    ConfigWindow.setModal(true);
+    ConfigWindow.exec();
 }
 
