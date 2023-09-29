@@ -11,11 +11,13 @@ CONFIG += c++17
 SOURCES += \
     initwindow.cpp \
     main.cpp \
-    mainwindow.cpp
+    mainwindow.cpp \
+    myserialport.cpp
 
 HEADERS += \
     initwindow.h \
-    mainwindow.h
+    mainwindow.h \
+    myserialport.h
 
 FORMS += \
     initwindow.ui \

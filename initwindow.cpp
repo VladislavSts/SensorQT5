@@ -1,31 +1,13 @@
 #include "initwindow.h"
 #include "ui_initwindow.h"
 #include <QDebug>
-#include <qthread.h>
+#include <QTimer>
 
-InitWindow::InitWindow(QWidget *parent) : QDialog(parent), ui(new Ui::InitWindow), SerialPort(new QSerialPort)
-{
-    ui->setupUi(this);
 
-    setWindowTitle("Connect Sensor");
-    setWindowFlags(windowFlags() & ~Qt::WindowContextHelpButtonHint);
 
-    // Конфигурация StatusLabel
-    ui->StatusSensorLabel->setAlignment(Qt::AlignHCenter); // Установка выравнивания по центру
-    QFont font;
-    font.setPointSize(14); // Установка курсивного шрифта размером 14
-    font.setItalic(true);
-    ui->StatusSensorLabel->setFont(font);
-
-    // Конфигурация последовательного порта
-    connect(SerialPort, SIGNAL(readyRead()), this, SLOT(CallbackSerialReceive()));
-
-    SerialPort->setPortName("COM4");
-    SerialPort->setBaudRate(QSerialPort::Baud9600);
-    SerialPort->setDataBits(QSerialPort::Data8);
-    SerialPort->setParity(QSerialPort::NoParity);
-    SerialPort->setStopBits(QSerialPort::OneStop);
-    SerialPort->setFlowControl(QSerialPort::NoFlowControl);
+InitWindow::InitWindow(QWidget *parent) :
+    QDialog(parent), ui(new Ui::InitWindow), SerialPort(new MySerialPort), TimerResponseStm(new QTimer) {
+        SetupInitWindow();
 }
 
 InitWindow::~InitWindow()
@@ -35,6 +17,7 @@ InitWindow::~InitWindow()
     delete SerialPort;
 }
 
+/* Обработчик кнокпи запуска датчика */
 void InitWindow::on_StartSensorButton_clicked()
 {
     ui->StatusSensorLabel->setText("Соединение с датчиком ...");
@@ -42,6 +25,10 @@ void InitWindow::on_StartSensorButton_clicked()
     if (SerialPort->open(QIODevice::ReadWrite) || SerialPort->isOpen()) {
         ui->StatusSensorLabel->setText("Порт " + SerialPort->portName() + " открыт! Соединение ...");
         SerialPort->write("start");
+
+        // Запускаем таймер для ожидания ответа
+        TimerResponseStm->setSingleShot(true);
+        TimerResponseStm->start(10000);  // 10 секунд
     }
     else {
         ui->StatusSensorLabel->setText("Не удалось открыть порт " + SerialPort->portName());
@@ -51,7 +38,7 @@ void InitWindow::on_StartSensorButton_clicked()
 /* Callback функция, вызывается при появлении новых данных для чтения */
 void InitWindow::CallbackSerialReceive()
 {
-    QByteArray data = SerialPort->readAll();  // Чтение доступных данных из порта
+    QByteArray data = SerialPort->readAll();
 
     if (data.isEmpty() || data == "\r") {
         // Игнорировать пустые строки или строки, состоящие только из символа \r
@@ -60,6 +47,7 @@ void InitWindow::CallbackSerialReceive()
 
     if (data == "startsensor") {
         ui->StatusSensorLabel->setText("Соединение установлено!");
+        TimerResponseStm->stop();
         // Нужно вычитывать данные от сенсора
         // Вопрос протокола обмена данными
     }
@@ -68,12 +56,35 @@ void InitWindow::CallbackSerialReceive()
     qDebug() << "Received message: " << message;  // Вывод строки в консоль
 }
 
+/* Обработчик события сигнала timeour таймера */
+void InitWindow::TimeoutResponseStm() {
+    // Время ожидания истекло, выводим ошибку
+    qDebug() << "Error: No response received within the timeout period";
+
+    ui->StatusSensorLabel->setText("Время истекло!");
+}
+
+/* Обработчик кноки повторного соединения */
 void InitWindow::on_RepConnectButton_clicked()
 {
     ui->StatusSensorLabel->setText("Повторное соединение ...");
     // Repeat connecting to sensor ...
 }
 
+/* Установка пользовательских настроек окна InitWindow (+ настройки последовательного порта) */
+void InitWindow::SetupInitWindow() {
+    ui->setupUi(this);
+
+    setWindowTitle("Connect Sensor");
+    setWindowFlags(windowFlags() & ~Qt::WindowContextHelpButtonHint); // отключить знак "?"
+
+    // Конфигурация последовательного порта
+    connect(SerialPort, SIGNAL(readyRead()), this, SLOT(CallbackSerialReceive()));
+    SerialPort->Init();
+
+    // Подключаем сигналы и слоты для обработки данных и ошибки таймаута
+    connect(TimerResponseStm, SIGNAL(timeout()), this, SLOT(TimeoutResponseStm()));
+}
 
 
 

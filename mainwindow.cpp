@@ -17,10 +17,9 @@ MainWindow::~MainWindow()
  // Обработчик нажатия кнопки Start -> переход в новое окно
 void MainWindow::on_StartButton_clicked()
 {
-    InitWindow Window;
-    Window.setModal(true);
-    Window.exec();
-
+    InitWindow InitWin;
+    InitWin.setModal(true);
+    InitWin.exec();
 }
 
 
