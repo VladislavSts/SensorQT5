@@ -20,7 +20,7 @@ private slots:
     void on_RepConnectButton_clicked();
     void on_StartSensorButton_clicked();
 
-    void SerialReceive();
+    void CallbackSerialReceive();
 
 private:
     Ui::InitWindow *ui;
