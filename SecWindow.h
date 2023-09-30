@@ -3,8 +3,10 @@
 
 #include <QDialog>
 #include <QSerialPort>
-
 #include "SerialPort.h"
+
+#define _msec(X) (X)
+#define _sec(X)  (X*1000)
 
 namespace Ui {
 class InitWindow;

@@ -31,7 +31,7 @@ void InitWindow::on_StartSensorButton_clicked()
 
         // Запускаем таймер для ожидания ответа
         TimerResponseStm->setSingleShot(true);
-        TimerResponseStm->start(10000);  // 10 секунд
+        TimerResponseStm->start(_sec(10));  // 10 секунд
     }
     else {
         ui->StatusSensorLabel->setText("Не удалось открыть порт " + SerialPort->portName());
