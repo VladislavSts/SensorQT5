@@ -1,6 +1,6 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
-#include "initwindow.h"
+#include "SecWindow.h"
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
@@ -18,6 +18,7 @@ MainWindow::~MainWindow()
 void MainWindow::on_StartButton_clicked()
 {
     InitWindow InitWin;
+    InitWin.SetupInitWindow();
     InitWin.setModal(true);
     InitWin.exec();
 }

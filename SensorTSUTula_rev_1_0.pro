@@ -9,18 +9,18 @@ CONFIG += c++17
 #DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
 
 SOURCES += \
-    initwindow.cpp \
+    SecWindow.cpp \
+    SerialPort.cpp \
     main.cpp \
-    mainwindow.cpp \
-    myserialport.cpp
+    mainwindow.cpp
 
 HEADERS += \
-    initwindow.h \
-    mainwindow.h \
-    myserialport.h
+    SecWindow.h \
+    SerialPort.h \
+    mainwindow.h
 
 FORMS += \
-    initwindow.ui \
+    SecWindow.ui \
     mainwindow.ui
 
 # Default rules for deployment.
