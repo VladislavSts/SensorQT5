@@ -25,6 +25,7 @@ public:
 private slots:
     void on_RepConnectButton_clicked();
     void on_StartSensorButton_clicked();
+    void on_GetDataButton_clicked();
 
     void CallbackSerialReceive();
     void TimeoutResponseStm();

@@ -16,13 +16,10 @@ struct ConfigSerialPort {
 class MySerialPort : public QSerialPort
 {
 public:
-    MySerialPort() : QSerialPort() {} // Конструктор по умолчанию
+    MySerialPort() : QSerialPort() {}; // Конструктор по умолчанию
 
     void Init();
-    void ReInit(ConfigSerialPort* Config);
-
-public slots:
-    void slot();
+    void ReInit(ConfigSerialPort* Config); // Возможно и не понадобится, но продумать стоит
 };
 
 #endif // MYSERIALPORT_H

@@ -19,8 +19,3 @@ void MySerialPort::ReInit(ConfigSerialPort* Config) {
     setStopBits(Config->StopBits);
     setFlowControl(Config->FlowControl);
 }
-
-void MySerialPort::slot()
-{
-
-}

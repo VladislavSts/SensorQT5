@@ -1,7 +1,10 @@
 #include "SecWindow.h"
-#include "ui_initwindow.h"
+#include "ui_SecWindow.h"
 #include <QDebug>
 #include <QTimer>
+
+//-----------------------------------------------------------------------------------------------------------------//
+bool StartStm32 = false;
 
 //-----------------------------------------------------------------------------------------------------------------//
 InitWindow::InitWindow(QWidget *parent) :
@@ -49,23 +52,34 @@ void InitWindow::CallbackSerialReceive()
         return;
     }
 
-    if (data == "startsensor") {
-        ui->StatusSensorLabel->setText("Соединение установлено!");
-        TimerResponseStm->stop();
-        // Нужно вычитывать данные от сенсора
-        // Вопрос протокола обмена данными
-    }
-
+    // Отладка
     QString message = QString(data);  // Преобразование массива байт в строку
     qDebug() << "Received message: " << message;  // Вывод строки в консоль
+
+    if (data == "stm32ready" && !StartStm32) {
+        StartStm32 = true;
+        ui->StatusSensorLabel->setText("Соединение установлено!");
+        TimerResponseStm->stop();
+        ui->StartSensorButton->setText("\nПолучить\nданные\n");
+        disconnect(ui->StartSensorButton, &QPushButton::clicked, nullptr, nullptr);  // Отключаем старый слот
+        connect(ui->StartSensorButton, &QPushButton::clicked, this, &InitWindow::on_GetDataButton_clicked);  // Подключаем новый слот
+    }
+
+    // Логика обработки полученных данных от stm32
+
+    // ...
+
+    // ...
 }
 
 //-----------------------------------------------------------------------------------------------------------------//
 /* Обработчик события сигнала timeour таймера */
-void InitWindow::TimeoutResponseStm() {
+void InitWindow::TimeoutResponseStm()
+{
     // Время ожидания истекло, выводим ошибку
     qDebug() << "Stm32 не отвечает!";
     ui->StatusSensorLabel->setText("Stm32 не отвечает!");
+    ui->StartSensorButton->setText("\nПовторить\nсоединение\n");
 }
 
 //-----------------------------------------------------------------------------------------------------------------//
@@ -82,14 +96,20 @@ void InitWindow::SetupInitWindow()
 {
     setWindowTitle("Connect Sensor");
     setWindowFlags(windowFlags() & ~Qt::WindowContextHelpButtonHint); // отключить знак "?"
-
     // Подключаем сигналы и слоты для SerialPort
     connect(SerialPort, &MySerialPort::readyRead, this, &InitWindow::CallbackSerialReceive);
     SerialPort->Init();
-
     // Подключаем сигналы и слоты для Timer
     connect(TimerResponseStm, &QTimer::timeout, this, &InitWindow::TimeoutResponseStm);
 }
 
+//-----------------------------------------------------------------------------------------------------------------//
+// Новый обработчик для кнопки "Получить данные"
+void InitWindow::on_GetDataButton_clicked()
+{
+    // Ваш код для получения данных
+    ui->StatusSensorLabel->setText("Получение данных ...");
+    ui->StartSensorButton->deleteLater();
+}
 
 
