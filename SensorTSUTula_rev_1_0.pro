@@ -8,20 +8,25 @@ CONFIG += c++17
 # In order to do so, uncomment the following line.
 #DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
 
+INCLUDEPATH += \
+    Modules \
+    Windows/MainWindow \
+    Windows/InitWindow
+
 SOURCES += \
-    SecWindow.cpp \
-    SerialPort.cpp \
-    main.cpp \
-    mainwindow.cpp
+    Core/main.cpp \
+    Modules/SerialPort.cpp \
+    Windows/MainWindow/mainwindow.cpp \
+    Windows/InitWindow/InitWindow.cpp
 
 HEADERS += \
-    SecWindow.h \
-    SerialPort.h \
-    mainwindow.h
+    Modules/SerialPort.h \
+    Windows/MainWindow/mainwindow.h \
+    Windows/InitWindow/InitWindow.h
 
 FORMS += \
-    SecWindow.ui \
-    mainwindow.ui
+    Windows/MainWindow/mainwindow.ui \
+    Windows/InitWindow/InitWindow.ui
 
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin

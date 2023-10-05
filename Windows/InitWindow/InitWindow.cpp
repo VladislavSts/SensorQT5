@@ -1,10 +1,12 @@
-#include "SecWindow.h"
+#include "InitWindow.h"
 #include "ui_SecWindow.h"
 #include <QDebug>
 #include <QTimer>
+#include <QMessageBox>
+#include <QCloseEvent>
 
 //-----------------------------------------------------------------------------------------------------------------//
-bool StartStm32 = false;
+bool ConnectStm32 = false; // Флаг успешного соединения с Stm32
 
 //-----------------------------------------------------------------------------------------------------------------//
 InitWindow::InitWindow(QWidget *parent) :
@@ -56,8 +58,8 @@ void InitWindow::CallbackSerialReceive()
     QString message = QString(data);  // Преобразование массива байт в строку
     qDebug() << "Received message: " << message;  // Вывод строки в консоль
 
-    if (data == "stm32ready" && !StartStm32) {
-        StartStm32 = true;
+    if (data == "stm32ready" && !ConnectStm32) {
+        ConnectStm32 = true;
         ui->StatusSensorLabel->setText("Соединение установлено!");
         TimerResponseStm->stop();
         ui->StartSensorButton->setText("\nПолучить\nданные\n");
@@ -83,11 +85,19 @@ void InitWindow::TimeoutResponseStm()
 }
 
 //-----------------------------------------------------------------------------------------------------------------//
-/* Обработчик кноки повторного соединения */
-void InitWindow::on_RepConnectButton_clicked()
+/* Переопределение метода закрытия окна */
+void InitWindow::closeEvent(QCloseEvent *Event)
 {
-    ui->StatusSensorLabel->setText("Повторное соединение ...");
-    // Repeat connecting to sensor ...
+    QMessageBox::StandardButton StateButton =
+        QMessageBox::question( this, "Завершение сеанса", tr("Вы действительно хотите завершить сеанс?\n"),
+            QMessageBox::No | QMessageBox::Yes, QMessageBox::No);
+
+    if (StateButton != QMessageBox::Yes)
+        Event->ignore();
+    else {
+        Event->accept();
+        qApp->quit(); // Закрыть приложение целиком
+    }
 }
 
 //-----------------------------------------------------------------------------------------------------------------//
@@ -107,7 +117,7 @@ void InitWindow::SetupInitWindow()
 // Новый обработчик для кнопки "Получить данные"
 void InitWindow::on_GetDataButton_clicked()
 {
-    // Ваш код для получения данных
+    // Rод для получения данных
     ui->StatusSensorLabel->setText("Получение данных ...");
     ui->StartSensorButton->deleteLater();
 }

@@ -1,5 +1,5 @@
-#ifndef SECWINDOW_H
-#define SECWINDOW_H
+#ifndef INITWINDOW_H
+#define INITWINDOW_H
 
 #include <QDialog>
 #include <QSerialPort>
@@ -23,7 +23,6 @@ public:
     void SetupInitWindow();
 
 private slots:
-    void on_RepConnectButton_clicked();
     void on_StartSensorButton_clicked();
     void on_GetDataButton_clicked();
 
@@ -35,7 +34,7 @@ private:
     MySerialPort* SerialPort;
     QTimer* TimerResponseStm;   // время ожидания ответа от stm32
 
-
+    void closeEvent(QCloseEvent* Event);
 };
 
-#endif // SECWINDOW_H
+#endif // INITWINDOW_H
