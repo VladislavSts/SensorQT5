@@ -3,8 +3,8 @@
 //-----------------------------------------------------------------------------------------------------------------//
 /* Конфигурация по умолчанию */
 void MySerialPort::Init() {
-    setPortName("COM4");
-    setBaudRate(QSerialPort::Baud9600);
+    setPortName("COM15");
+    setBaudRate(QSerialPort::Baud115200);
     setDataBits(QSerialPort::Data8);
     setParity(QSerialPort::NoParity);
     setStopBits(QSerialPort::OneStop);

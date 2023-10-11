@@ -49,7 +49,7 @@ void InitWindow::CallbackSerialReceive()
 {
     QByteArray data = SerialPort->readAll();
 
-    if (data.isEmpty() || data == "\r") {
+    if (data.isEmpty() || data == "\r" || data == "") {
         // Игнорировать пустые строки или строки, состоящие только из символа \r
         return;
     }
@@ -58,7 +58,7 @@ void InitWindow::CallbackSerialReceive()
     QString message = QString(data);  // Преобразование массива байт в строку
     qDebug() << "Received message: " << message;  // Вывод строки в консоль
 
-    if (data == "stm32ready" && !ConnectStm32) {
+    if (data.contains("stm32ready") && !ConnectStm32) {
         ConnectStm32 = true;
         ui->StatusSensorLabel->setText("Соединение установлено!");
         TimerResponseStm->stop();
@@ -117,9 +117,12 @@ void InitWindow::SetupInitWindow()
 // Новый обработчик для кнопки "Получить данные"
 void InitWindow::on_GetDataButton_clicked()
 {
-    // Rод для получения данных
+    // Код для получения данных
     ui->StatusSensorLabel->setText("Получение данных ...");
     ui->StartSensorButton->deleteLater();
+
+    // Отправить команду в последовательный порт на получение данных
+    SerialPort->write("getdata");
 }
 
 
