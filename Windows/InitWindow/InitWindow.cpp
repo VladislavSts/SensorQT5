@@ -4,6 +4,7 @@
 #include <QTimer>
 #include <QMessageBox>
 #include <QCloseEvent>
+#include <QSerialPort>
 
 //-----------------------------------------------------------------------------------------------------------------//
 bool ConnectStm32 = false; // Флаг успешного соединения с Stm32
@@ -47,9 +48,13 @@ void InitWindow::on_StartSensorButton_clicked()
 /* Callback функция, вызывается при появлении новых данных для чтения */
 void InitWindow::CallbackSerialReceive()
 {
-    QByteArray data = SerialPort->readAll();
+    static QByteArray data; // = SerialPort->readAll();
 
-    if (data.isEmpty() || data == "\r" || data == "") {
+    while (SerialPort->waitForReadyRead(3)) {
+        data.append(SerialPort->readAll());
+    }
+
+    if (data.isEmpty() || data == "\r" || data == "" || data == "\n") {
         // Игнорировать пустые строки или строки, состоящие только из символа \r
         return;
     }
@@ -66,12 +71,11 @@ void InitWindow::CallbackSerialReceive()
         disconnect(ui->StartSensorButton, &QPushButton::clicked, nullptr, nullptr);  // Отключаем старый слот
         connect(ui->StartSensorButton, &QPushButton::clicked, this, &InitWindow::on_GetDataButton_clicked);  // Подключаем новый слот
     }
+    else if (ConnectStm32) {
+        ui->StatusSensorLabel->setText(message);
+    }
 
-    // Логика обработки полученных данных от stm32
-
-    // ...
-
-    // ...
+    data.clear();
 }
 
 //-----------------------------------------------------------------------------------------------------------------//
@@ -88,14 +92,18 @@ void InitWindow::TimeoutResponseStm()
 /* Переопределение метода закрытия окна */
 void InitWindow::closeEvent(QCloseEvent *Event)
 {
+    SerialPort->write("stopdata");
+
     QMessageBox::StandardButton StateButton =
         QMessageBox::question( this, "Завершение сеанса", tr("Вы действительно хотите завершить сеанс?\n"),
             QMessageBox::No | QMessageBox::Yes, QMessageBox::No);
 
-    if (StateButton != QMessageBox::Yes)
+    if (StateButton != QMessageBox::Yes) {
         Event->ignore();
+        SerialPort->write("getdata");
+    }
     else {
-        Event->accept();
+        Event->accept();       
         qApp->quit(); // Закрыть приложение целиком
     }
 }
@@ -106,9 +114,13 @@ void InitWindow::SetupInitWindow()
 {
     setWindowTitle("Connect Sensor");
     setWindowFlags(windowFlags() & ~Qt::WindowContextHelpButtonHint); // отключить знак "?"
+
+    // Установка размера буфера чтения на достаточно большое значение
+    SerialPort->setReadBufferSize(4096); // Здесь 4096 - это размер буфера
     // Подключаем сигналы и слоты для SerialPort
     connect(SerialPort, &MySerialPort::readyRead, this, &InitWindow::CallbackSerialReceive);
     SerialPort->Init();
+
     // Подключаем сигналы и слоты для Timer
     connect(TimerResponseStm, &QTimer::timeout, this, &InitWindow::TimeoutResponseStm);
 }

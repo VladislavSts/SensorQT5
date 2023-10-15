@@ -3,6 +3,7 @@
 
 #include <QDialog>
 #include <QSerialPort>
+#include <QLabel>
 #include "SerialPort.h"
 
 #define _msec(X) (X)
@@ -33,6 +34,7 @@ private:
     Ui::InitWindow *ui;
     MySerialPort* SerialPort;
     QTimer* TimerResponseStm;   // время ожидания ответа от stm32
+    QLabel *dataLabel;
 
     void closeEvent(QCloseEvent* Event);
 };
