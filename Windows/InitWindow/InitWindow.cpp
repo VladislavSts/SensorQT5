@@ -50,7 +50,7 @@ void InitWindow::CallbackSerialReceive()
 {
     static QByteArray data; // = SerialPort->readAll();
 
-    while (SerialPort->waitForReadyRead(3)) {
+    while (SerialPort->waitForReadyRead(10)) {
         data.append(SerialPort->readAll());
     }
 
