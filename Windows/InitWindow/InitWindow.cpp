@@ -5,6 +5,9 @@
 #include <QMessageBox>
 #include <QCloseEvent>
 #include <QSerialPort>
+#include <QDateTime>
+#include <QTextStream>
+
 
 //-----------------------------------------------------------------------------------------------------------------//
 bool ConnectStm32 = false; // Флаг успешного соединения с Stm32
@@ -13,7 +16,11 @@ bool ConnectStm32 = false; // Флаг успешного соединения �
 InitWindow::InitWindow(QWidget *parent) :
     QDialog(parent), ui(new Ui::InitWindow), SerialPort(new MySerialPort), TimerResponseStm(new QTimer)
 {
-        ui->setupUi(this);
+    ui->setupUi(this);
+    File = new QFile("output.txt");
+    // Задаем интервал таймера в миллисекундах
+    Timer.setInterval(1); // 1 мс
+    Timer.stop();
 }
 
 //-----------------------------------------------------------------------------------------------------------------//
@@ -49,13 +56,22 @@ void InitWindow::on_StartSensorButton_clicked()
 void InitWindow::CallbackSerialReceive()
 {
     static QByteArray data; // = SerialPort->readAll();
+    QTextStream OutStream(File);
+    QString dateTime;
 
-    while (SerialPort->waitForReadyRead(10)) {
+    while (SerialPort->waitForReadyRead(3)) {
+        // TODO На больших скоростях опроса не вывозит, надо пофиксить
         data.append(SerialPort->readAll());
+   }
+
+   // Игнорировать пустые строки или строки, состоящие только из символа \r
+    if (data.isEmpty() || data == "\r" || data == "" || data == "\n") {   
+        return;
     }
 
-    if (data.isEmpty() || data == "\r" || data == "" || data == "\n") {
-        // Игнорировать пустые строки или строки, состоящие только из символа \r
+    // Открытие файла
+    if (!File->open(QIODevice::ReadWrite | QIODevice::Text | QIODevice::Append)) {
+        qDebug() << "Cannot open file for writing: " << File->fileName();
         return;
     }
 
@@ -63,6 +79,7 @@ void InitWindow::CallbackSerialReceive()
     QString message = QString(data);  // Преобразование массива байт в строку
     qDebug() << "Received message: " << message;  // Вывод строки в консоль
 
+    // stm32 готов к работе, получена строка подтверждения
     if (data.contains("stm32ready") && !ConnectStm32) {
         ConnectStm32 = true;
         ui->StatusSensorLabel->setText("Соединение установлено!");
@@ -70,11 +87,69 @@ void InitWindow::CallbackSerialReceive()
         ui->StartSensorButton->setText("\nПолучить\nданные\n");
         disconnect(ui->StartSensorButton, &QPushButton::clicked, nullptr, nullptr);  // Отключаем старый слот
         connect(ui->StartSensorButton, &QPushButton::clicked, this, &InitWindow::on_GetDataButton_clicked);  // Подключаем новый слот
+
+        QDateTime currentDateTime = QDateTime::currentDateTime();
+        QString formattedDateTime = currentDateTime.toString("dd.MM.yyyy hh:mm:ss");
+        qDebug() << "Текущая дата и время:" << formattedDateTime;
+
+        dateTime = formattedDateTime + " -> Дата эксперимента\n";
+        OutStream << dateTime;
+
+        OutStream << "time\t\t" << "Accel_x\t\t" << "Accel_y\t\t" <<
+                     "Accel_z\t\t" << "Gyro_x\t\t" << "Gyro_y\t\t" << "Gyro_z\t\t" << "Temperature\t\t";
+        OutStream << Qt::endl;
     }
     else if (ConnectStm32) {
-        ui->StatusSensorLabel->setText(message);
+        /* Показать данные в label */
+//        ui->StatusSensorLabel->setText(message);
+
+        static bool FlagTimer = false; // Флаг запуска таймера только один раз
+        if (FlagTimer == false) {
+            elapsedTimer.start(); // Запускаем таймер
+            FlagTimer = true;
+        }
+
+        // Получаем текущее значение таймера (время, прошедшее с момента последнего запуска)
+        qint64 elapsedMilliseconds = elapsedTimer.elapsed();
+        double elapsedSeconds = static_cast<double>(elapsedMilliseconds) / 1000.0;
+
+        QString DataTime = QString("%1").arg(elapsedSeconds, 0, 'f', 3);
+
+        // Разделяем строку на отдельные строки по символу ' ' (space)
+        char Symbol = ' ';
+        QList<QByteArray> List;
+        List = data.split(Symbol);
+        static float floatValue;
+
+        DataTime = DataTime.leftJustified(15, ' '); // Выравнивание по левому краю
+        DataTime += " ";
+
+        OutStream << DataTime; // время в мсек
+
+        // Проходим по каждой строке
+        for (const QString line : List) {
+            // Ищем позицию двоеточия в строке
+            int colonIndex = line.indexOf(":");
+            if (colonIndex != -1) {
+                // Извлекаем имя параметра и значение
+                QString paramName = line.mid(0, colonIndex).trimmed();
+                QString paramValue = line.mid(colonIndex + 1).trimmed();
+                floatValue = paramValue.toFloat();
+
+                qDebug() << "Параметр:" << paramName;
+                qDebug() << "Значение:" << floatValue;
+
+                paramValue = paramValue.leftJustified(15, ' '); // Выравнивание по левому краю
+                paramValue += " ";
+
+                OutStream << paramValue;
+            }
+        }
+
+        OutStream << Qt::endl;
     }
 
+    File->close();
     data.clear();
 }
 
@@ -126,9 +201,14 @@ void InitWindow::SetupInitWindow()
 }
 
 //-----------------------------------------------------------------------------------------------------------------//
+//#include "Graphic.h"
 // Новый обработчик для кнопки "Получить данные"
 void InitWindow::on_GetDataButton_clicked()
 {
+//    Graphic Graph;
+//    Graph.setModal(true);
+//    Graph.exec();
+
     // Код для получения данных
     ui->StatusSensorLabel->setText("Получение данных ...");
     ui->StartSensorButton->deleteLater();

@@ -5,6 +5,11 @@
 #include <QSerialPort>
 #include <QLabel>
 #include "SerialPort.h"
+#include <QFile>
+#include <QTimer>
+#include <QTime>
+#include <QElapsedTimer>
+#include <QTextStream>
 
 #define _msec(X) (X)
 #define _sec(X)  (X*1000)
@@ -35,6 +40,12 @@ private:
     MySerialPort* SerialPort;
     QTimer* TimerResponseStm;   // время ожидания ответа от stm32
     QLabel *dataLabel;
+
+    QFile* File;
+
+    QTimer Timer;
+    QTime StartTime;
+    QElapsedTimer elapsedTimer;
 
     void closeEvent(QCloseEvent* Event);
 };

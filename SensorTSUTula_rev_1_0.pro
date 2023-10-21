@@ -1,4 +1,4 @@
-QT       += core gui serialport
+QT += core gui serialport printsupport widgets
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
@@ -11,20 +11,26 @@ CONFIG += c++17
 INCLUDEPATH += \
     Modules \
     Windows/MainWindow \
-    Windows/InitWindow
+    Windows/InitWindow \
+    QCustomPlot
 
 SOURCES += \
     Core/main.cpp \
     Modules/SerialPort.cpp \
+    QCustomPlot/Graphic.cpp \
     Windows/MainWindow/mainwindow.cpp \
-    Windows/InitWindow/InitWindow.cpp
+    Windows/InitWindow/InitWindow.cpp \
+    QCustomPlot/qcustomplot.cpp
 
 HEADERS += \
     Modules/SerialPort.h \
+    QCustomPlot/Graphic.h \
     Windows/MainWindow/mainwindow.h \
-    Windows/InitWindow/InitWindow.h
+    Windows/InitWindow/InitWindow.h \
+    QCustomPlot/qcustomplot.h
 
 FORMS += \
+    QCustomPlot/Graphic.ui \
     Windows/MainWindow/mainwindow.ui \
     Windows/InitWindow/InitWindow.ui
 
