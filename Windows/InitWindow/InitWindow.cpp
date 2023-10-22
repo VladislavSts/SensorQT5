@@ -59,9 +59,10 @@ void InitWindow::CallbackSerialReceive()
     QTextStream OutStream(File);
     QString dateTime;
 
-    while (SerialPort->waitForReadyRead(3)) {
-        // TODO На больших скоростях опроса не вывозит, надо пофиксить
-        data.append(SerialPort->readAll());
+    while (SerialPort->waitForReadyRead(10)) {
+        data.append(SerialPort->readLine());
+        if (data.contains("\n"))
+            break;
    }
 
    // Игнорировать пустые строки или строки, состоящие только из символа \r
@@ -95,8 +96,8 @@ void InitWindow::CallbackSerialReceive()
         dateTime = formattedDateTime + " -> Дата эксперимента\n";
         OutStream << dateTime;
 
-        OutStream << "time\t\t" << "Accel_x\t\t" << "Accel_y\t\t" <<
-                     "Accel_z\t\t" << "Gyro_x\t\t" << "Gyro_y\t\t" << "Gyro_z\t\t" << "Temperature\t\t";
+        OutStream << "time;" << "Accel_x;" << "Accel_y;" <<
+                     "Accel_z;" << "Gyro_x;" << "Gyro_y;" << "Gyro_z;" << "Temperature";
         OutStream << Qt::endl;
     }
     else if (ConnectStm32) {
@@ -121,8 +122,9 @@ void InitWindow::CallbackSerialReceive()
         List = data.split(Symbol);
         static float floatValue;
 
-        DataTime = DataTime.leftJustified(15, ' '); // Выравнивание по левому краю
-        DataTime += " ";
+        DataTime += ";";
+//        DataTime = DataTime.leftJustified(15, ' '); // Выравнивание по левому краю
+//        DataTime += " ";
 
         OutStream << DataTime; // время в мсек
 
@@ -139,8 +141,9 @@ void InitWindow::CallbackSerialReceive()
                 qDebug() << "Параметр:" << paramName;
                 qDebug() << "Значение:" << floatValue;
 
-                paramValue = paramValue.leftJustified(15, ' '); // Выравнивание по левому краю
-                paramValue += " ";
+                paramValue += ";";
+//                paramValue = paramValue.leftJustified(15, ' '); // Выравнивание по левому краю
+//                paramValue += " ";
 
                 OutStream << paramValue;
             }
