@@ -18,9 +18,6 @@ InitWindow::InitWindow(QWidget *parent) :
 {
     ui->setupUi(this);
     File = new QFile("output.txt");
-    // Задаем интервал таймера в миллисекундах
-    Timer.setInterval(1); // 1 мс
-    Timer.stop();
 }
 
 //-----------------------------------------------------------------------------------------------------------------//
@@ -44,35 +41,28 @@ void InitWindow::on_StartSensorButton_clicked()
 
         // Запускаем таймер для ожидания ответа
         TimerResponseStm->setSingleShot(true);
-        TimerResponseStm->start(_sec(10));  // 10 секунд
+        TimerResponseStm->start(_sec(3));  // 3 секунды
     }
     else {
         ui->StatusSensorLabel->setText("Не удалось открыть порт " + SerialPort->portName());
     }
 }
-
+//-----------------------------------------------------------------------------------------------------------------//
+/* Обработчик события сигнала timeour таймера */
+void InitWindow::TimeoutResponseStm()
+{
+    // Время ожидания истекло, выводим ошибку
+    ui->StatusSensorLabel->setText("Датчик не отвечает!");
+    ui->StartSensorButton->setText("\nПовторить\nсоединение\n");
+}
 //-----------------------------------------------------------------------------------------------------------------//
 /* Callback функция, вызывается при появлении новых данных для чтения */
 void InitWindow::CallbackSerialReceive()
 {
-    static QByteArray data; // = SerialPort->readAll();
-    QTextStream OutStream(File);
-    QString dateTime;
+    data.append(SerialPort->readAll());
 
-    while (SerialPort->waitForReadyRead(10)) {
-        data.append(SerialPort->readLine());
-        if (data.contains("\n"))
-            break;
-   }
-
-   // Игнорировать пустые строки или строки, состоящие только из символа \r
-    if (data.isEmpty() || data == "\r" || data == "" || data == "\n") {   
-        return;
-    }
-
-    // Открытие файла
-    if (!File->open(QIODevice::ReadWrite | QIODevice::Text | QIODevice::Append)) {
-        qDebug() << "Cannot open file for writing: " << File->fileName();
+    // Принимать данные пока не встретится конец строки '\n' и игнорировать пустые строки
+    if (!data.contains("\r\n") || data.isEmpty() || data == "") {
         return;
     }
 
@@ -80,7 +70,22 @@ void InitWindow::CallbackSerialReceive()
     QString message = QString(data);  // Преобразование массива байт в строку
     qDebug() << "Received message: " << message;  // Вывод строки в консоль
 
-    // stm32 готов к работе, получена строка подтверждения
+    emit DataIsReady(); // сгенерировать сигнал о готовности данных к обработке
+}
+//-----------------------------------------------------------------------------------------------------------------//
+/* Метод, реализующий парсинг значений из полученной строки от stm и записывает эти значения в файл по столбцам с разделителем ";" */
+void InitWindow::WriteDataToFile()
+{
+    QTextStream OutStream(File);
+    QString dateTime;
+
+    // Открытие файла
+    if (!File->open(QIODevice::ReadWrite | QIODevice::Text | QIODevice::Append)) {
+        qDebug() << "Cannot open file for writing: " << File->fileName();
+        return;
+    }
+
+    /* Датчик готов к работе, получена строка подтверждения */
     if (data.contains("stm32ready") && !ConnectStm32) {
         ConnectStm32 = true;
         ui->StatusSensorLabel->setText("Соединение установлено!");
@@ -92,18 +97,15 @@ void InitWindow::CallbackSerialReceive()
         QDateTime currentDateTime = QDateTime::currentDateTime();
         QString formattedDateTime = currentDateTime.toString("dd.MM.yyyy hh:mm:ss");
         qDebug() << "Текущая дата и время:" << formattedDateTime;
-
-        dateTime = formattedDateTime + " -> Дата эксперимента\n";
+        dateTime = formattedDateTime + " -----> Дата эксперимента\n";
         OutStream << dateTime;
 
-        OutStream << "time;" << "Accel_x;" << "Accel_y;" <<
-                     "Accel_z;" << "Gyro_x;" << "Gyro_y;" << "Gyro_z;" << "Temperature";
+        // Заголовок для записи данных
+        OutStream << "time;" << "Accel_x;" << "Accel_y;" << "Accel_z;" << "Gyro_x;" << "Gyro_y;" << "Gyro_z;" << "Temperature";
         OutStream << Qt::endl;
     }
     else if (ConnectStm32) {
-        /* Показать данные в label */
-//        ui->StatusSensorLabel->setText(message);
-
+        /* Опрос датчика */
         static bool FlagTimer = false; // Флаг запуска таймера только один раз
         if (FlagTimer == false) {
             elapsedTimer.start(); // Запускаем таймер
@@ -115,57 +117,39 @@ void InitWindow::CallbackSerialReceive()
         double elapsedSeconds = static_cast<double>(elapsedMilliseconds) / 1000.0;
 
         QString DataTime = QString("%1").arg(elapsedSeconds, 0, 'f', 3);
-
-        // Разделяем строку на отдельные строки по символу ' ' (space)
-        char Symbol = ' ';
-        QList<QByteArray> List;
-        List = data.split(Symbol);
-        static float floatValue;
-
         DataTime += ";";
-//        DataTime = DataTime.leftJustified(15, ' '); // Выравнивание по левому краю
-//        DataTime += " ";
+//      DataTime = DataTime.leftJustified(15, ' '); // Выравнивание по левому краю
+//      DataTime += " ";
 
-        OutStream << DataTime; // время в мсек
+        OutStream << DataTime; // вывод времени в мсек
 
-        // Проходим по каждой строке
-        for (const QString line : List) {
-            // Ищем позицию двоеточия в строке
-            int colonIndex = line.indexOf(":");
-            if (colonIndex != -1) {
-                // Извлекаем имя параметра и значение
-                QString paramName = line.mid(0, colonIndex).trimmed();
-                QString paramValue = line.mid(colonIndex + 1).trimmed();
-                floatValue = paramValue.toFloat();
+        // Извлечение значения для каждого параметра из списка значений
+        // hard code :) зато молотит как часы
+        QList<QByteArray> values = data.split(' ');
+        float accel_x = values[0].mid(8).toDouble();   // Accel_x:
+        float accel_y = values[1].mid(8).toDouble();   // Accel_y:
+        float accel_z = values[2].mid(8).toDouble();   // Accel_z:
+        float gyro_x = values[3].mid(7).toDouble();    // Gyro_x:
+        float gyro_y = values[4].mid(7).toDouble();    // Gyro_y:
+        float gyro_z = values[5].mid(7).toDouble();    // Gyro_z:
+        float temperature = values[6].mid(12).toDouble(); // Temperature:
 
-                qDebug() << "Параметр:" << paramName;
-                qDebug() << "Значение:" << floatValue;
-
-                paramValue += ";";
-//                paramValue = paramValue.leftJustified(15, ' '); // Выравнивание по левому краю
-//                paramValue += " ";
-
-                OutStream << paramValue;
-            }
+        if (accel_x == 0 && accel_y == 0 && accel_z == 0) {
+            ui->StatusSensorLabel->setText("Беда, датчик отвалился :(");
+            OutStream << "Connection is failed! \n";
+            ConnectStm32 = false;
         }
-
-        OutStream << Qt::endl;
+        else {
+            // Запись данных в файл в формате столбцов с разделителем ";"
+            OutStream << QString::number(accel_x, 'f', 4)     << ";"    << QString::number(accel_y, 'f', 4) << ";";
+            OutStream << QString::number(accel_z, 'f', 4)     << ";"    << QString::number(gyro_x, 'f', 4) << ";";
+            OutStream << QString::number(gyro_y, 'f', 4)      << ";"    << QString::number(gyro_z, 'f', 4) << ";";
+            OutStream << QString::number(temperature, 'f', 4) << ";"    << "\n";
+        }
     }
-
     File->close();
     data.clear();
 }
-
-//-----------------------------------------------------------------------------------------------------------------//
-/* Обработчик события сигнала timeour таймера */
-void InitWindow::TimeoutResponseStm()
-{
-    // Время ожидания истекло, выводим ошибку
-    qDebug() << "Stm32 не отвечает!";
-    ui->StatusSensorLabel->setText("Stm32 не отвечает!");
-    ui->StartSensorButton->setText("\nПовторить\nсоединение\n");
-}
-
 //-----------------------------------------------------------------------------------------------------------------//
 /* Переопределение метода закрытия окна */
 void InitWindow::closeEvent(QCloseEvent *Event)
@@ -182,7 +166,8 @@ void InitWindow::closeEvent(QCloseEvent *Event)
     }
     else {
         Event->accept();       
-        qApp->quit(); // Закрыть приложение целиком
+//        qApp->quit(); // Закрыть приложение целиком
+        QCoreApplication::quit(); // Полностью приостановить работу программы
     }
 }
 
@@ -201,10 +186,12 @@ void InitWindow::SetupInitWindow()
 
     // Подключаем сигналы и слоты для Timer
     connect(TimerResponseStm, &QTimer::timeout, this, &InitWindow::TimeoutResponseStm);
+
+    // Подключить сигнал готовности данных к обработке
+    connect(this, &InitWindow::DataIsReady, this, &InitWindow::WriteDataToFile);
 }
 
 //-----------------------------------------------------------------------------------------------------------------//
-//#include "Graphic.h"
 // Новый обработчик для кнопки "Получить данные"
 void InitWindow::on_GetDataButton_clicked()
 {

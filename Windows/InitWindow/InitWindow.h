@@ -28,6 +28,9 @@ public:
 
     void SetupInitWindow();
 
+signals:
+    void DataIsReady();
+
 private slots:
     void on_StartSensorButton_clicked();
     void on_GetDataButton_clicked();
@@ -39,15 +42,12 @@ private:
     Ui::InitWindow *ui;
     MySerialPort* SerialPort;
     QTimer* TimerResponseStm;   // время ожидания ответа от stm32
-    QLabel *dataLabel;
-
     QFile* File;
-
-    QTimer Timer;
-    QTime StartTime;
     QElapsedTimer elapsedTimer;
+    QByteArray data;
 
     void closeEvent(QCloseEvent* Event);
+    void WriteDataToFile();
 };
 
 #endif // INITWINDOW_H

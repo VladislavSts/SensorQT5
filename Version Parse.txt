@@ -1,0 +1,29 @@
+//        // Разделяем строку на отдельные строки по символу ' ' (space)
+//        char Symbol = ' ';
+//        QList<QByteArray> List;
+//        List = data.split(Symbol);
+//        static float floatValue;
+
+
+
+//        // Проходим по каждой строке
+//        for (const QString line : List) {
+//            // Ищем позицию двоеточия в строке
+//            int colonIndex = line.indexOf(":");
+//            if (colonIndex != -1) {
+//                // Извлекаем имя параметра и значение
+//                QString paramName = line.mid(0, colonIndex).trimmed();
+//                QString paramValue = line.mid(colonIndex + 1).trimmed();
+//                floatValue = paramValue.toFloat();
+
+//                qDebug() << "Параметр:" << paramName;
+//                qDebug() << "Значение:" << floatValue;
+
+//                paramValue += ";";
+////                paramValue = paramValue.leftJustified(15, ' '); // Выравнивание по левому краю
+////                paramValue += " ";
+
+//                OutStream << paramValue;
+//            }
+//        }
+//        OutStream << Qt::endl;
