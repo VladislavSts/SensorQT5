@@ -1,0 +1,97 @@
+/********************************************************************************
+** Form generated from reading UI file 'InitWindow.ui'
+**
+** Created by: Qt User Interface Compiler version 5.15.2
+**
+** WARNING! All changes made in this file will be lost when recompiling UI file!
+********************************************************************************/
+
+#ifndef UI_INITWINDOW_H
+#define UI_INITWINDOW_H
+
+#include <QtCore/QVariant>
+#include <QtWidgets/QApplication>
+#include <QtWidgets/QDialog>
+#include <QtWidgets/QGridLayout>
+#include <QtWidgets/QLabel>
+#include <QtWidgets/QPushButton>
+#include <QtWidgets/QSpacerItem>
+
+QT_BEGIN_NAMESPACE
+
+class Ui_InitWindow
+{
+public:
+    QGridLayout *gridLayout_2;
+    QSpacerItem *verticalSpacer;
+    QGridLayout *gridLayout;
+    QPushButton *StartSensorButton;
+    QLabel *StatusSensorLabel;
+    QSpacerItem *verticalSpacer_2;
+    QSpacerItem *verticalSpacer_3;
+
+    void setupUi(QDialog *InitWindow)
+    {
+        if (InitWindow->objectName().isEmpty())
+            InitWindow->setObjectName(QString::fromUtf8("InitWindow"));
+        InitWindow->resize(716, 480);
+        gridLayout_2 = new QGridLayout(InitWindow);
+        gridLayout_2->setObjectName(QString::fromUtf8("gridLayout_2"));
+        verticalSpacer = new QSpacerItem(20, 40, QSizePolicy::Minimum, QSizePolicy::Expanding);
+
+        gridLayout_2->addItem(verticalSpacer, 4, 0, 1, 1);
+
+        gridLayout = new QGridLayout();
+        gridLayout->setObjectName(QString::fromUtf8("gridLayout"));
+        StartSensorButton = new QPushButton(InitWindow);
+        StartSensorButton->setObjectName(QString::fromUtf8("StartSensorButton"));
+        QFont font;
+        font.setPointSize(14);
+        font.setItalic(true);
+        StartSensorButton->setFont(font);
+
+        gridLayout->addWidget(StartSensorButton, 0, 0, 1, 1);
+
+
+        gridLayout_2->addLayout(gridLayout, 3, 0, 1, 1);
+
+        StatusSensorLabel = new QLabel(InitWindow);
+        StatusSensorLabel->setObjectName(QString::fromUtf8("StatusSensorLabel"));
+        StatusSensorLabel->setFont(font);
+        StatusSensorLabel->setAlignment(Qt::AlignCenter);
+
+        gridLayout_2->addWidget(StatusSensorLabel, 1, 0, 1, 1);
+
+        verticalSpacer_2 = new QSpacerItem(20, 40, QSizePolicy::Minimum, QSizePolicy::Expanding);
+
+        gridLayout_2->addItem(verticalSpacer_2, 0, 0, 1, 1);
+
+        verticalSpacer_3 = new QSpacerItem(20, 40, QSizePolicy::Minimum, QSizePolicy::Expanding);
+
+        gridLayout_2->addItem(verticalSpacer_3, 2, 0, 1, 1);
+
+
+        retranslateUi(InitWindow);
+
+        QMetaObject::connectSlotsByName(InitWindow);
+    } // setupUi
+
+    void retranslateUi(QDialog *InitWindow)
+    {
+        InitWindow->setWindowTitle(QCoreApplication::translate("InitWindow", "Dialog", nullptr));
+        StartSensorButton->setText(QCoreApplication::translate("InitWindow", "\n"
+"\320\227\320\260\320\277\321\203\321\201\321\202\320\270\321\202\321\214 \n"
+"\320\264\320\260\321\202\321\207\320\270\320\272\n"
+"", nullptr));
+        StatusSensorLabel->setText(QCoreApplication::translate("InitWindow", "<html><head/><body><p align=\"center\"><br/></p><p align=\"center\">\320\222\321\213 \320\274\320\276\320\266\320\265\321\202\320\265 \320\267\320\260\320\277\321\203\321\201\321\202\320\270\321\202\321\214 \320\264\320\260\321\202\321\207\320\270\320\272</p><p align=\"center\"><br/></p></body></html>", nullptr));
+    } // retranslateUi
+
+};
+
+namespace Ui {
+    class InitWindow: public Ui_InitWindow {};
+} // namespace Ui
+
+QT_END_NAMESPACE
+
+#endif // UI_INITWINDOW_H

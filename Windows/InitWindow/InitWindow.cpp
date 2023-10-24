@@ -1,5 +1,5 @@
+#include "ui_InitWindow.h"
 #include "InitWindow.h"
-#include "ui_SecWindow.h"
 #include <QDebug>
 #include <QTimer>
 #include <QMessageBox>
@@ -79,12 +79,6 @@ void InitWindow::WriteDataToFile()
     QTextStream OutStream(File);
     QString dateTime;
 
-    // Открытие файла
-    if (!File->open(QIODevice::ReadWrite | QIODevice::Text | QIODevice::Append)) {
-        qDebug() << "Cannot open file for writing: " << File->fileName();
-        return;
-    }
-
     /* Датчик готов к работе, получена строка подтверждения */
     if (data.contains("stm32ready") && !ConnectStm32) {
         ConnectStm32 = true;
@@ -94,11 +88,19 @@ void InitWindow::WriteDataToFile()
         disconnect(ui->StartSensorButton, &QPushButton::clicked, nullptr, nullptr);  // Отключаем старый слот
         connect(ui->StartSensorButton, &QPushButton::clicked, this, &InitWindow::on_GetDataButton_clicked);  // Подключаем новый слот
 
+        // Первое включение - начало эксперимента, файл нужно перетереть
+        if (!File->open(QIODevice::ReadWrite | QIODevice::Truncate)) {
+            qDebug() << "Cannot open file for writing: " << File->fileName();
+            return;
+        }
+        QByteArray emptyData;
+        File->write(emptyData);
+
         QDateTime currentDateTime = QDateTime::currentDateTime();
         QString formattedDateTime = currentDateTime.toString("dd.MM.yyyy hh:mm:ss");
         qDebug() << "Текущая дата и время:" << formattedDateTime;
-        dateTime = formattedDateTime + " -----> Дата эксперимента\n";
-        OutStream << dateTime;
+        dateTime = "Дата эксперимента: " + formattedDateTime;
+        OutStream << dateTime << "\n";
 
         // Заголовок для записи данных
         OutStream << "time;" << "Accel_x;" << "Accel_y;" << "Accel_z;" << "Gyro_x;" << "Gyro_y;" << "Gyro_z;" << "Temperature";
@@ -110,6 +112,12 @@ void InitWindow::WriteDataToFile()
         if (FlagTimer == false) {
             elapsedTimer.start(); // Запускаем таймер
             FlagTimer = true;
+        }
+
+        // Открыть файл в режиме дописывания данных
+        if (!File->open(QIODevice::ReadWrite | QIODevice::Text | QIODevice::Append)) {
+            qDebug() << "Cannot open file for writing: " << File->fileName();
+            return;
         }
 
         // Получаем текущее значение таймера (время, прошедшее с момента последнего запуска)
@@ -126,13 +134,13 @@ void InitWindow::WriteDataToFile()
         // Извлечение значения для каждого параметра из списка значений
         // hard code :) зато молотит как часы
         QList<QByteArray> values = data.split(' ');
-        float accel_x = values[0].mid(8).toDouble();   // Accel_x:
-        float accel_y = values[1].mid(8).toDouble();   // Accel_y:
-        float accel_z = values[2].mid(8).toDouble();   // Accel_z:
-        float gyro_x = values[3].mid(7).toDouble();    // Gyro_x:
-        float gyro_y = values[4].mid(7).toDouble();    // Gyro_y:
-        float gyro_z = values[5].mid(7).toDouble();    // Gyro_z:
-        float temperature = values[6].mid(12).toDouble(); // Temperature:
+        double accel_x = values[0].mid(8).toDouble();   // Accel_x:
+        double accel_y = values[1].mid(8).toDouble();   // Accel_y:
+        double accel_z = values[2].mid(8).toDouble();   // Accel_z:
+        double gyro_x = values[3].mid(7).toDouble();    // Gyro_x:
+        double gyro_y = values[4].mid(7).toDouble();    // Gyro_y:
+        double gyro_z = values[5].mid(7).toDouble();    // Gyro_z:
+        double temperature = values[6].mid(12).toDouble(); // Temperature:
 
         if (accel_x == 0 && accel_y == 0 && accel_z == 0) {
             ui->StatusSensorLabel->setText("Беда, датчик отвалился :(");

@@ -12,25 +12,19 @@ INCLUDEPATH += \
     Modules \
     Windows/MainWindow \
     Windows/InitWindow \
-    QCustomPlot
 
 SOURCES += \
     Core/main.cpp \
     Modules/SerialPort.cpp \
-    QCustomPlot/Graphic.cpp \
     Windows/MainWindow/mainwindow.cpp \
     Windows/InitWindow/InitWindow.cpp \
-    QCustomPlot/qcustomplot.cpp
 
 HEADERS += \
     Modules/SerialPort.h \
-    QCustomPlot/Graphic.h \
     Windows/MainWindow/mainwindow.h \
     Windows/InitWindow/InitWindow.h \
-    QCustomPlot/qcustomplot.h
 
 FORMS += \
-    QCustomPlot/Graphic.ui \
     Windows/MainWindow/mainwindow.ui \
     Windows/InitWindow/InitWindow.ui
 
@@ -38,3 +32,6 @@ FORMS += \
 qnx: target.path = /tmp/$${TARGET}/bin
 else: unix:!android: target.path = /opt/$${TARGET}/bin
 !isEmpty(target.path): INSTALLS += target
+
+DISTFILES += \
+    README.md
