@@ -38,6 +38,8 @@ private slots:
     void CallbackSerialReceive();
     void TimeoutResponseStm();
 
+    void on_SetNameSerialPort_clicked();
+
 private:
     Ui::InitWindow *ui;
     MySerialPort* SerialPort;

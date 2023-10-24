@@ -7,6 +7,7 @@
 #include <QSerialPort>
 #include <QDateTime>
 #include <QTextStream>
+#include <QRegularExpression>
 
 
 //-----------------------------------------------------------------------------------------------------------------//
@@ -18,6 +19,7 @@ InitWindow::InitWindow(QWidget *parent) :
 {
     ui->setupUi(this);
     File = new QFile("output.txt");
+    ui->StartSensorButton->hide();
 }
 
 //-----------------------------------------------------------------------------------------------------------------//
@@ -215,4 +217,22 @@ void InitWindow::on_GetDataButton_clicked()
     SerialPort->write("getdata");
 }
 
+
+void InitWindow::on_SetNameSerialPort_clicked()
+{
+    QString PortName = ui->GetNameSerialPort->text();
+
+    // Определение регулярного выражения
+    QRegularExpression regex("^COM\\d+$");
+
+    // Проверка строки на соответствие регулярному выражению
+    if (regex.match(PortName).hasMatch()) {
+        SerialPort->setPortName(PortName);
+        ui->StatusSensorLabel->setText("Вы можете запустить датчик");
+        ui->StartSensorButton->show();
+    }
+    else {
+        ui->StatusSensorLabel->setText("Некорректное имя COM порта!");
+    }
+}
 

@@ -20,7 +20,7 @@ void MainWindow::on_StartButton_clicked()
     InitWindow InitWin;
     InitWin.SetupInitWindow();
     InitWin.setModal(true);
-    InitWin.exec();
+    InitWin.exec(); 
 }
 
 
