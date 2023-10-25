@@ -236,7 +236,7 @@ void InitWindow::on_GetDataButton_clicked()
 }
 
 //-----------------------------------------------------------------------------------------------------------------//
-#include "qcustomplot.h"
+
 void InitWindow::PaintGraphic()
 {
     SerialPort->write("stopdata");
