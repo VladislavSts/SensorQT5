@@ -39,6 +39,7 @@ private slots:
     void TimeoutResponseStm();
 
     void on_SetNameSerialPort_clicked();
+    void PaintGraphic();
 
 private:
     Ui::InitWindow *ui;

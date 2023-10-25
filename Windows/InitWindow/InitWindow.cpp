@@ -1,4 +1,4 @@
-#include "ui_InitWindow.h"
+#include "ui_InitWindow.h""
 #include "InitWindow.h"
 #include <QDebug>
 #include <QTimer>
@@ -11,9 +11,11 @@
 
 
 //-----------------------------------------------------------------------------------------------------------------//
+
 bool ConnectStm32 = false; // Флаг успешного соединения с Stm32
 
 //-----------------------------------------------------------------------------------------------------------------//
+
 InitWindow::InitWindow(QWidget *parent) :
     QDialog(parent), ui(new Ui::InitWindow), SerialPort(new MySerialPort), TimerResponseStm(new QTimer)
 {
@@ -23,6 +25,7 @@ InitWindow::InitWindow(QWidget *parent) :
 }
 
 //-----------------------------------------------------------------------------------------------------------------//
+
 InitWindow::~InitWindow()
 {
     delete ui;
@@ -32,6 +35,7 @@ InitWindow::~InitWindow()
 }
 
 //-----------------------------------------------------------------------------------------------------------------//
+
 /* Обработчик кнокпи запуска датчика */
 void InitWindow::on_StartSensorButton_clicked()
 {
@@ -50,6 +54,7 @@ void InitWindow::on_StartSensorButton_clicked()
     }
 }
 //-----------------------------------------------------------------------------------------------------------------//
+
 /* Обработчик события сигнала timeour таймера */
 void InitWindow::TimeoutResponseStm()
 {
@@ -57,7 +62,9 @@ void InitWindow::TimeoutResponseStm()
     ui->StatusSensorLabel->setText("Датчик не отвечает!");
     ui->StartSensorButton->setText("\nПовторить\nсоединение\n");
 }
+
 //-----------------------------------------------------------------------------------------------------------------//
+
 /* Callback функция, вызывается при появлении новых данных для чтения */
 void InitWindow::CallbackSerialReceive()
 {
@@ -74,7 +81,9 @@ void InitWindow::CallbackSerialReceive()
 
     emit DataIsReady(); // сгенерировать сигнал о готовности данных к обработке
 }
+
 //-----------------------------------------------------------------------------------------------------------------//
+
 /* Метод, реализующий парсинг значений из полученной строки от stm и записывает эти значения в файл по столбцам с разделителем ";" */
 void InitWindow::WriteDataToFile()
 {
@@ -160,28 +169,32 @@ void InitWindow::WriteDataToFile()
     File->close();
     data.clear();
 }
+
 //-----------------------------------------------------------------------------------------------------------------//
+
 /* Переопределение метода закрытия окна */
 void InitWindow::closeEvent(QCloseEvent *Event)
 {
     SerialPort->write("stopdata");
 
-    QMessageBox::StandardButton StateButton =
-        QMessageBox::question( this, "Завершение сеанса", tr("Вы действительно хотите завершить сеанс?\n"),
-            QMessageBox::No | QMessageBox::Yes, QMessageBox::No);
+    QMessageBox msgBox;
+    msgBox.setWindowTitle("Завершение сеанса");
+    msgBox.setText("Вы действительно хотите завершить сеанс?");
+    msgBox.setStandardButtons(QMessageBox::Yes | QMessageBox::No);
+    msgBox.setDefaultButton(QMessageBox::No);
 
-    if (StateButton != QMessageBox::Yes) {
+    int result = msgBox.exec();
+
+    if (result != QMessageBox::Yes) {
         Event->ignore();
-        SerialPort->write("getdata");
     }
     else {
-        Event->accept();       
-//        qApp->quit(); // Закрыть приложение целиком
+        Event->accept();
         QCoreApplication::quit(); // Полностью приостановить работу программы
     }
 }
-
 //-----------------------------------------------------------------------------------------------------------------//
+
 /* Установка пользовательских настроек окна InitWindow (+ настройки последовательного порта) */
 void InitWindow::SetupInitWindow()
 {
@@ -202,21 +215,35 @@ void InitWindow::SetupInitWindow()
 }
 
 //-----------------------------------------------------------------------------------------------------------------//
+
 // Новый обработчик для кнопки "Получить данные"
 void InitWindow::on_GetDataButton_clicked()
 {
-//    Graphic Graph;
-//    Graph.setModal(true);
-//    Graph.exec();
+    /* Скрыть label и button при старте программы */
+    ui->SetNameSerialPort->hide();
+    ui->GetNameSerialPort->hide();
 
     // Код для получения данных
     ui->StatusSensorLabel->setText("Получение данных ...");
-    ui->StartSensorButton->deleteLater();
+    ui->StartSensorButton->setText("Построить график\nпо полученным данным");
+
+    disconnect(ui->StartSensorButton, &QPushButton::clicked, nullptr, nullptr);  // Отключаем старый слот
+    connect(ui->StartSensorButton, &QPushButton::clicked, this, &InitWindow::PaintGraphic);  // Подключаем новый
+//    ui->StartSensorButton->deleteLater();
 
     // Отправить команду в последовательный порт на получение данных
     SerialPort->write("getdata");
 }
 
+//-----------------------------------------------------------------------------------------------------------------//
+#include "qcustomplot.h"
+void InitWindow::PaintGraphic()
+{
+    SerialPort->write("stopdata");
+    ui->StatusSensorLabel->setText("Запутите скрипт python\nчтобы построить график :)");
+}
+
+//-----------------------------------------------------------------------------------------------------------------//
 
 void InitWindow::on_SetNameSerialPort_clicked()
 {

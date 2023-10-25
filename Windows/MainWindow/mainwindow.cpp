@@ -17,9 +17,11 @@ MainWindow::~MainWindow()
  // Обработчик нажатия кнопки Start -> переход в новое окно
 void MainWindow::on_StartButton_clicked()
 {
+    MainWindow::close(); // закрытие старого окна
+
     InitWindow InitWin;
     InitWin.SetupInitWindow();
-    InitWin.setModal(true);
+    InitWin.setModal(false);
     InitWin.exec(); 
 }
 

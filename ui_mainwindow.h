@@ -36,7 +36,7 @@ public:
     {
         if (MainWindow->objectName().isEmpty())
             MainWindow->setObjectName(QString::fromUtf8("MainWindow"));
-        MainWindow->resize(608, 450);
+        MainWindow->resize(434, 329);
         QFont font;
         font.setPointSize(9);
         font.setBold(false);
@@ -77,7 +77,7 @@ public:
         MainWindow->setCentralWidget(centralwidget);
         menubar = new QMenuBar(MainWindow);
         menubar->setObjectName(QString::fromUtf8("menubar"));
-        menubar->setGeometry(QRect(0, 0, 608, 21));
+        menubar->setGeometry(QRect(0, 0, 434, 21));
         MainWindow->setMenuBar(menubar);
 
         retranslateUi(MainWindow);

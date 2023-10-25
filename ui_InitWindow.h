@@ -35,7 +35,7 @@ public:
     {
         if (InitWindow->objectName().isEmpty())
             InitWindow->setObjectName(QString::fromUtf8("InitWindow"));
-        InitWindow->resize(716, 480);
+        InitWindow->resize(457, 391);
         verticalLayout = new QVBoxLayout(InitWindow);
         verticalLayout->setObjectName(QString::fromUtf8("verticalLayout"));
         gridLayout = new QGridLayout();
