@@ -145,13 +145,17 @@ void InitWindow::WriteDataToFile()
         // Извлечение значения для каждого параметра из списка значений
         // hard code :) зато молотит как часы
         QList<QByteArray> values = data.split(' ');
-        double accel_x = values[0].mid(8).toDouble();   // Accel_x:
-        double accel_y = values[1].mid(8).toDouble();   // Accel_y:
-        double accel_z = values[2].mid(8).toDouble();   // Accel_z:
-        double gyro_x = values[3].mid(7).toDouble();    // Gyro_x:
-        double gyro_y = values[4].mid(7).toDouble();    // Gyro_y:
-        double gyro_z = values[5].mid(7).toDouble();    // Gyro_z:
-        double temperature = values[6].mid(12).toDouble(); // Temperature:
+        static double accel_x, accel_y, accel_z, gyro_x, gyro_y, gyro_z, temperature;
+
+        if (values.size() >= 7) {
+            accel_x = values[0].mid(8).toDouble();   // Accel_x:
+            accel_y = values[1].mid(8).toDouble();   // Accel_y:
+            accel_z = values[2].mid(8).toDouble();   // Accel_z:
+            gyro_x = values[3].mid(7).toDouble();    // Gyro_x:
+            gyro_y = values[4].mid(7).toDouble();    // Gyro_y:
+            gyro_z = values[5].mid(7).toDouble();    // Gyro_z:
+            temperature = values[6].mid(12).toDouble(); // Temperature:
+        }
 
         if (accel_x == 0 && accel_y == 0 && accel_z == 0) {
             ui->StatusSensorLabel->setText("Беда, датчик отвалился :(");
