@@ -163,11 +163,13 @@ void InitWindow::WriteDataToFile()
             ConnectStm32 = false;
         }
         else {
-            // Запись данных в файл в формате столбцов с разделителем ";"
-            OutStream << QString::number(accel_x, 'f', 4)     << ";"    << QString::number(accel_y, 'f', 4) << ";";
-            OutStream << QString::number(accel_z, 'f', 4)     << ";"    << QString::number(gyro_x, 'f', 4) << ";";
-            OutStream << QString::number(gyro_y, 'f', 4)      << ";"    << QString::number(gyro_z, 'f', 4) << ";";
-            OutStream << QString::number(temperature, 'f', 4) << ";"    << "\n";
+            if (accel_x <= 1.5 || accel_y <= 1.5 || accel_z <= 1.5 || temperature <= 50) {
+                // Запись данных в файл в формате столбцов с разделителем ";"
+                OutStream << QString::number(accel_x, 'f', 4)     << ";"    << QString::number(accel_y, 'f', 4) << ";";
+                OutStream << QString::number(accel_z, 'f', 4)     << ";"    << QString::number(gyro_x, 'f', 4) << ";";
+                OutStream << QString::number(gyro_y, 'f', 4)      << ";"    << QString::number(gyro_z, 'f', 4) << ";";
+                OutStream << QString::number(temperature, 'f', 4) << ";"    << "\n";
+            }
         }
     }
     File->close();
