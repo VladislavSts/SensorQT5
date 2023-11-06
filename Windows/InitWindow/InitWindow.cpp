@@ -1,4 +1,4 @@
-#include "ui_InitWindow.h""
+#include "ui_InitWindow.h"
 #include "InitWindow.h"
 #include <QDebug>
 #include <QTimer>
@@ -8,7 +8,7 @@
 #include <QDateTime>
 #include <QTextStream>
 #include <QRegularExpression>
-
+#include <QtMath>
 
 //-----------------------------------------------------------------------------------------------------------------//
 
@@ -71,15 +71,16 @@ void InitWindow::CallbackSerialReceive()
     data.append(SerialPort->readAll());
 
     // Принимать данные пока не встретится конец строки '\n' и игнорировать пустые строки
-    if (!data.contains("\r\n") || data.isEmpty() || data == "") {
-        return;
+//    if (!data.contains("\r\n") || data.isEmpty() || data == "") {
+//        return;
+//    }
+
+    while (data.contains("\r\n")) { // Пока в буфере есть символ новой строки
+        // Отладка
+        QString message = QString(data);  // Преобразование массива байт в строку
+        qDebug() << "Received message: " << message;  // Вывод строки в консоль
+        emit DataIsReady(); // сгенерировать сигнал о готовности данных к обработке
     }
-
-    // Отладка
-    QString message = QString(data);  // Преобразование массива байт в строку
-    qDebug() << "Received message: " << message;  // Вывод строки в консоль
-
-    emit DataIsReady(); // сгенерировать сигнал о готовности данных к обработке
 }
 
 //-----------------------------------------------------------------------------------------------------------------//
@@ -125,12 +126,6 @@ void InitWindow::WriteDataToFile()
             FlagTimer = true;
         }
 
-        // Открыть файл в режиме дописывания данных
-        if (!File->open(QIODevice::ReadWrite | QIODevice::Text | QIODevice::Append)) {
-            qDebug() << "Cannot open file for writing: " << File->fileName();
-            return;
-        }
-
         // Получаем текущее значение таймера (время, прошедшее с момента последнего запуска)
         qint64 elapsedMilliseconds = elapsedTimer.elapsed();
         double elapsedSeconds = static_cast<double>(elapsedMilliseconds) / 1000.0;
@@ -147,14 +142,31 @@ void InitWindow::WriteDataToFile()
         QList<QByteArray> values = data.split(' ');
         static double accel_x, accel_y, accel_z, gyro_x, gyro_y, gyro_z, temperature;
 
-        if (values.size() >= 7) {
-            accel_x = values[0].mid(8).toDouble();   // Accel_x:
-            accel_y = values[1].mid(8).toDouble();   // Accel_y:
-            accel_z = values[2].mid(8).toDouble();   // Accel_z:
-            gyro_x = values[3].mid(7).toDouble();    // Gyro_x:
-            gyro_y = values[4].mid(7).toDouble();    // Gyro_y:
-            gyro_z = values[5].mid(7).toDouble();    // Gyro_z:
-            temperature = values[6].mid(12).toDouble(); // Temperature:
+        // Перебор элементов списка данных
+        foreach (QString data, values) {
+            // Разбиение каждого элемента списка по двоеточию
+            QStringList pair = data.split(":");
+            if (pair.size() == 2) {
+                QString key = pair[0];
+                QString value = pair[1];
+
+                // Присваивание значения соответствующей переменной
+                if (key == "Accel_x") {
+                    accel_x = value.toDouble();
+                } else if (key == "Accel_y") {
+                    accel_y = value.toDouble();
+                } else if (key == "Accel_z") {
+                    accel_z = value.toDouble();
+                } else if (key == "Gyro_x") {
+                    gyro_x = value.toDouble();
+                } else if (key == "Gyro_y") {
+                    gyro_y = value.toDouble();
+                } else if (key == "Gyro_z") {
+                    gyro_z = value.toDouble();
+                } else if (key == "Temperature") {
+                    temperature = value.toDouble();
+                }
+            }
         }
 
         if (accel_x == 0 && accel_y == 0 && accel_z == 0) {
@@ -163,16 +175,13 @@ void InitWindow::WriteDataToFile()
             ConnectStm32 = false;
         }
         else {
-            if (accel_x <= 1.5 || accel_y <= 1.5 || accel_z <= 1.5 || temperature <= 50) {
-                // Запись данных в файл в формате столбцов с разделителем ";"
-                OutStream << QString::number(accel_x, 'f', 4)     << ";"    << QString::number(accel_y, 'f', 4) << ";";
-                OutStream << QString::number(accel_z, 'f', 4)     << ";"    << QString::number(gyro_x, 'f', 4) << ";";
-                OutStream << QString::number(gyro_y, 'f', 4)      << ";"    << QString::number(gyro_z, 'f', 4) << ";";
-                OutStream << QString::number(temperature, 'f', 4) << ";"    << "\n";
-            }
+            // Запись данных в файл в формате столбцов с разделителем ";"
+            OutStream << QString::number(accel_x, 'f', 4)     << ";"    << QString::number(accel_y, 'f', 4) << ";";
+            OutStream << QString::number(accel_z, 'f', 4)     << ";"    << QString::number(gyro_x, 'f', 4) << ";";
+            OutStream << QString::number(gyro_y, 'f', 4)      << ";"    << QString::number(gyro_z, 'f', 4) << ";";
+            OutStream << QString::number(temperature, 'f', 4) << ";"    << "\n";
         }
     }
-    File->close();
     data.clear();
 }
 
@@ -182,6 +191,7 @@ void InitWindow::WriteDataToFile()
 void InitWindow::closeEvent(QCloseEvent *Event)
 {
     SerialPort->write("stopdata");
+    File->close();
 
     QMessageBox msgBox;
     msgBox.setWindowTitle("Завершение сеанса");
@@ -208,7 +218,7 @@ void InitWindow::SetupInitWindow()
     setWindowFlags(windowFlags() & ~Qt::WindowContextHelpButtonHint); // отключить знак "?"
 
     // Установка размера буфера чтения на достаточно большое значение
-    SerialPort->setReadBufferSize(4096); // Здесь 4096 - это размер буфера
+    SerialPort->setReadBufferSize(256); // Установка максимального размера строки для чтения
     // Подключаем сигналы и слоты для SerialPort
     connect(SerialPort, &MySerialPort::readyRead, this, &InitWindow::CallbackSerialReceive);
     SerialPort->Init();
